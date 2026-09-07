@@ -6,7 +6,9 @@
 
 ## Sobre o Projeto
 
-Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrado [aqui](https://github.com/gustavovolp/Zbank)), desenvolvida com **React Native + Expo**. Permite ao usuário se autenticar, visualizar um dashboard com gráficos e análises financeiras, listar e filtrar suas transações (com paginação via Cloud Firestore) e adicionar/editar transações com upload de recibos para o Firebase Storage.
+Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrado [aqui](https://github.com/gustavovolp/Zbank)), desenvolvida com **React Native + Expo**. Permite ao usuário se autenticar, visualizar um dashboard com gráficos e análises financeiras e listar, filtrar, adicionar e editar suas transações com paginação via Cloud Firestore.
+
+> **Nota sobre o escopo**: o desafio original pede upload de recibos para o Firebase Storage. Desde o final de 2024 o Firebase exige o plano pago (Blaze, com cartão cadastrado) para habilitar o Storage em projetos novos — como o objetivo aqui era manter o projeto 100% gratuito, essa funcionalidade específica não foi implementada.
 
 ---
 
@@ -15,7 +17,7 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 - **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication).
 - **Dashboard**: saldo atual, total de receitas e despesas, gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
 - **Listagem de transações**: scroll infinito (paginação no Cloud Firestore), busca por descrição, filtros por tipo, categoria e intervalo de datas.
-- **Adicionar/editar transação**: validação avançada (valor, categoria, descrição), sugestão automática de categoria a partir da descrição, upload de recibo (imagem ou PDF) para o Firebase Storage, exclusão de transação.
+- **Adicionar/editar transação**: validação avançada (valor, categoria, descrição), sugestão automática de categoria a partir da descrição, exclusão de transação.
 - Estado global via **Context API** (`AuthContext` para autenticação, `TransactionsContext` para as transações).
 
 ---
@@ -24,10 +26,8 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 
 - [Expo](https://expo.dev/) (React Native, TypeScript)
 - [React Navigation](https://reactnavigation.org/) (bottom tabs + native stack)
-- [Firebase](https://firebase.google.com/) (Authentication, Cloud Firestore, Storage)
+- [Firebase](https://firebase.google.com/) (Authentication, Cloud Firestore)
 - [react-native-chart-kit](https://github.com/indiespirit/react-native-chart-kit) + `react-native-svg`
-- [react-hook-form](https://react-hook-form.com/)
-- `expo-image-picker` / `expo-document-picker` (upload de recibos)
 - `@react-native-community/datetimepicker`
 
 ---
@@ -43,14 +43,13 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 
 ## 1. Criando o projeto Firebase
 
-O app depende de um projeto Firebase próprio (Authentication + Firestore + Storage). Siga o passo a passo:
+O app depende de um projeto Firebase próprio (Authentication + Firestore, ambos disponíveis no plano gratuito Spark). Siga o passo a passo:
 
 1. Acesse o [Firebase Console](https://console.firebase.google.com/) e clique em **"Adicionar projeto"**. Dê um nome (ex.: `zbank-mobile`) e conclua a criação (o Google Analytics é opcional).
 2. No menu lateral, vá em **Build > Authentication** → aba **Sign-in method** → habilite o provedor **E-mail/senha**.
-3. Vá em **Build > Firestore Database** → **Criar banco de dados** → inicie em **modo de produção** (as regras de segurança do passo 3 abaixo liberam o acesso correto) → escolha a região mais próxima.
-4. Vá em **Build > Storage** → **Começar** → mantenha o modo de produção → mesma região do Firestore.
-5. Ainda no console, vá em **Configurações do projeto** (ícone de engrenagem) → aba **Geral** → em "Seus apps", clique no ícone **`</>`** (Web) para registrar um app Web (mesmo sendo um app mobile, o SDK JS do Firebase usa a config de um "app Web"). Dê um apelido e finalize — não precisa configurar Hosting.
-6. Copie os valores do objeto `firebaseConfig` exibido (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).
+3. Vá em **Build > Firestore Database** → **Criar banco de dados** → inicie em **modo de produção** (as regras de segurança abaixo liberam o acesso correto) → escolha a região mais próxima.
+4. Ainda no console, vá em **Configurações do projeto** (ícone de engrenagem) → aba **Geral** → em "Seus apps", clique no ícone **`</>`** (Web) para registrar um app Web (mesmo sendo um app mobile, o SDK JS do Firebase usa a config de um "app Web"). Dê um apelido e finalize — não precisa configurar Hosting.
+5. Copie os valores do objeto `firebaseConfig` exibido (apiKey, authDomain, projectId, messagingSenderId, appId).
 
 ### Regras de segurança
 
@@ -61,19 +60,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId}/transactions/{transactionId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
-Em **Storage > Regras**, substitua e publique:
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /receipts/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
@@ -103,13 +89,12 @@ npm install
 cp .env.example .env
 ```
 
-Preencha o `.env` com os valores copiados do `firebaseConfig` no passo 1.6:
+Preencha o `.env` com os valores copiados do `firebaseConfig` no passo 1.5:
 
 ```
 EXPO_PUBLIC_FIREBASE_API_KEY=
 EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
 EXPO_PUBLIC_FIREBASE_PROJECT_ID=
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
 ```
@@ -129,7 +114,7 @@ Isso abre o Metro Bundler no terminal com um QR code. Para rodar:
 - **No celular**: abra o app **Expo Go** e escaneie o QR code (Android) ou use a câmera nativa (iOS).
 - **Emulador Android**: com o Android Studio configurado, pressione `a` no terminal.
 - **Simulador iOS** (necessário macOS): pressione `i` no terminal.
-- **Web** (smoke-test, funcionalidade limitada — câmera/document picker/date picker nativos podem não funcionar no navegador): `npm run web`.
+- **Web** (smoke-test, funcionalidade limitada — o date picker nativo pode não funcionar no navegador): `npm run web`.
 
 Na primeira execução, crie uma conta pela tela **"Criar conta"** (não há usuário de demonstração pré-cadastrado, já que o projeto Firebase é criado do zero por quem for rodar o app).
 
@@ -142,7 +127,7 @@ zbank-mobile/
 ├── App.tsx                        # carregamento de fontes, providers e navegação raiz
 ├── src/
 │   ├── config/
-│   │   └── firebase.ts            # inicialização do Firebase (Auth, Firestore, Storage)
+│   │   └── firebase.ts            # inicialização do Firebase (Auth, Firestore)
 │   ├── contexts/
 │   │   ├── AuthContext.tsx        # login, registro, logout, estado do usuário
 │   │   └── TransactionsContext.tsx # CRUD, paginação e filtros das transações
@@ -160,8 +145,7 @@ zbank-mobile/
 │   ├── constants/
 │   │   ├── categorias.ts          # categorias por tipo + sugestão automática por descrição
 │   │   └── theme.ts               # cores e tipografia do design system Zbank
-│   ├── types/transaction.ts
-│   └── utils/anexoUtils.ts        # validação de anexos (tipo/tamanho)
+│   └── types/transaction.ts
 └── .env.example
 ```
 
@@ -179,12 +163,9 @@ users/{uid}/transactions/{transactionId}
   data: string,          // "AAAA-MM-DD"
   descricao: string,
   categoria: string,
-  anexo: { nome, tipoArquivo, tamanho, url } | null,
   criadoEm: number       // epoch ms — cursor de paginação
 }
 ```
-
-Os recibos são armazenados no Storage em `receipts/{uid}/{transactionId}/{arquivo}`.
 
 ---
 
@@ -204,6 +185,7 @@ Fonte de destaque: Orbitron (logo/títulos).
 
 ## Limitações conhecidas
 
+- **Upload de recibos (Firebase Storage) não foi implementado** — desde o final de 2024 o Firebase só libera o Storage em projetos com o plano pago Blaze (exige cartão cadastrado). Como a prioridade era manter o projeto inteiramente gratuito, essa funcionalidade específica do desafio ficou de fora; todo o restante (dashboard, autenticação, listagem paginada/filtrada, CRUD de transações) está implementado e funcional.
 - A busca por descrição na listagem é aplicada sobre a página de transações já carregada (client-side), não sobre toda a coleção — o Cloud Firestore não oferece busca full-text nativa. Filtros de tipo, categoria e intervalo de datas, por outro lado, são aplicados diretamente na consulta ao Firestore.
 - Se os filtros de categoria/tipo forem combinados e o Firestore pedir a criação de um índice composto (mensagem de erro com um link), basta abrir o link indicado no console para criá-lo automaticamente.
 
@@ -211,4 +193,4 @@ Fonte de destaque: Orbitron (logo/títulos).
 
 ## Vídeo Demonstrativo
 
-Lembrete para a entrega: gravar um vídeo de até 5 minutos mostrando login/autenticação, adicionar/editar transação, listar e filtrar transações, upload de anexo e a integração com o Firebase (dados aparecendo no console do Firestore/Storage).
+Lembrete para a entrega: gravar um vídeo de até 5 minutos mostrando login/autenticação, adicionar/editar transação, listar e filtrar transações e a integração com o Firebase (dados aparecendo no console do Firestore).

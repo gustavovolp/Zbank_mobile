@@ -1,12 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,14 +19,8 @@ import { CATEGORIAS_POR_TIPO, sugerirCategoria } from '../constants/categorias';
 import { colors, radius, spacing } from '../constants/theme';
 import { useTransactions } from '../contexts/TransactionsContext';
 import type { AppStackParamList } from '../navigation/types';
-import {
-  formatarTamanhoArquivo,
-  TAMANHO_MAXIMO_ANEXO,
-  validarArquivoAnexo,
-  type ArquivoSelecionado,
-} from '../utils/anexoUtils';
 import type { CategoriaValue } from '../constants/categorias';
-import type { Anexo, TransactionType } from '../types/transaction';
+import type { TransactionType } from '../types/transaction';
 
 const TIPO_OPCOES = [
   { value: 'deposito', label: 'Depósito' },
@@ -44,7 +35,6 @@ interface FormErrors {
   valor?: string;
   categoria?: string;
   descricao?: string;
-  anexo?: string;
 }
 
 export function TransactionFormScreen() {
@@ -63,9 +53,6 @@ export function TransactionFormScreen() {
   const [descricao, setDescricao] = useState('');
   const [data, setData] = useState(hojeISO());
   const [mostrarDatePicker, setMostrarDatePicker] = useState(false);
-  const [arquivo, setArquivo] = useState<ArquivoSelecionado | null>(null);
-  const [anexoExistente, setAnexoExistente] = useState<Anexo | null>(null);
-  const [removerAnexo, setRemoverAnexo] = useState(false);
   const [erros, setErros] = useState<FormErrors>({});
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
@@ -78,7 +65,6 @@ export function TransactionFormScreen() {
       setValor(String(transacaoExistente.valor));
       setDescricao(transacaoExistente.descricao);
       setData(transacaoExistente.data);
-      setAnexoExistente(transacaoExistente.anexo ?? null);
     }
   }, [transacaoExistente]);
 
@@ -104,60 +90,6 @@ export function TransactionFormScreen() {
   function handleCategoriaChange(value: string) {
     setCategoria(value as CategoriaValue);
     setCategoriaEditadaManualmente(true);
-  }
-
-  async function escolherImagem() {
-    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissao.granted) {
-      Alert.alert('Permissão necessária', 'Precisamos de acesso às suas fotos para anexar o recibo.');
-      return;
-    }
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-    });
-    if (resultado.canceled || !resultado.assets?.[0]) return;
-
-    const asset = resultado.assets[0];
-    const selecionado: ArquivoSelecionado = {
-      uri: asset.uri,
-      nome: asset.fileName ?? `foto-${Date.now()}.jpg`,
-      tipoArquivo: asset.mimeType ?? 'image/jpeg',
-      tamanho: asset.fileSize ?? 0,
-    };
-    aplicarArquivoSelecionado(selecionado);
-  }
-
-  async function escolherDocumento() {
-    const resultado = await DocumentPicker.getDocumentAsync({
-      type: ['image/jpeg', 'image/png', 'application/pdf'],
-    });
-    if (resultado.canceled || !resultado.assets?.[0]) return;
-
-    const asset = resultado.assets[0];
-    const selecionado: ArquivoSelecionado = {
-      uri: asset.uri,
-      nome: asset.name,
-      tipoArquivo: asset.mimeType ?? 'application/pdf',
-      tamanho: asset.size ?? 0,
-    };
-    aplicarArquivoSelecionado(selecionado);
-  }
-
-  function aplicarArquivoSelecionado(selecionado: ArquivoSelecionado) {
-    const erro = validarArquivoAnexo(selecionado);
-    if (erro) {
-      setErros((prev) => ({ ...prev, anexo: erro }));
-      return;
-    }
-    setErros((prev) => ({ ...prev, anexo: undefined }));
-    setArquivo(selecionado);
-    setRemoverAnexo(false);
-  }
-
-  function removerAnexoSelecionado() {
-    setArquivo(null);
-    if (anexoExistente) setRemoverAnexo(true);
   }
 
   function validar(): boolean {
@@ -192,12 +124,9 @@ export function TransactionFormScreen() {
       };
 
       if (isEdicao && transactionId) {
-        await updateTransaction(transactionId, input, {
-          novoArquivo: arquivo ?? undefined,
-          removerAnexo,
-        });
+        await updateTransaction(transactionId, input);
       } else {
-        await addTransaction(input, arquivo);
+        await addTransaction(input);
       }
       navigation.goBack();
     } catch (err) {
@@ -228,13 +157,6 @@ export function TransactionFormScreen() {
       },
     ]);
   }
-
-  const anexoAtivo = arquivo
-    ? { tipoArquivo: arquivo.tipoArquivo, uri: arquivo.uri, nome: arquivo.nome }
-    : !removerAnexo && anexoExistente
-      ? { tipoArquivo: anexoExistente.tipoArquivo, uri: anexoExistente.url, nome: anexoExistente.nome }
-      : null;
-  const mostrarPreviewImagem = anexoAtivo?.tipoArquivo.startsWith('image/') ?? false;
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -287,30 +209,6 @@ export function TransactionFormScreen() {
           )}
         </View>
 
-        <View style={styles.campo}>
-          <Text style={styles.label}>Anexo (recibo)</Text>
-          <Text style={styles.ajuda}>
-            JPG, PNG ou PDF, até {formatarTamanhoArquivo(TAMANHO_MAXIMO_ANEXO)}.
-          </Text>
-
-          {anexoAtivo && mostrarPreviewImagem ? (
-            <Image source={{ uri: anexoAtivo.uri }} style={styles.preview} />
-          ) : anexoAtivo ? (
-            <View style={styles.previewPdf}>
-              <Text style={styles.previewPdfTexto}>📄 {anexoAtivo.nome}</Text>
-            </View>
-          ) : null}
-
-          {erros.anexo ? <Text style={styles.erroAnexo}>{erros.anexo}</Text> : null}
-
-          <View style={styles.anexoBotoes}>
-            <Button label="Escolher foto" variant="secondary" onPress={escolherImagem} style={styles.anexoBotao} />
-            <Button label="Escolher PDF" variant="ghost" onPress={escolherDocumento} style={styles.anexoBotao} />
-          </View>
-
-          {anexoAtivo && <Button label="Remover anexo" variant="ghost" onPress={removerAnexoSelecionado} />}
-        </View>
-
         <Button label="Salvar" onPress={handleSalvar} loading={salvando} style={styles.salvar} />
 
         {isEdicao && (
@@ -332,7 +230,6 @@ const styles = StyleSheet.create({
   },
   campo: { marginBottom: spacing.md },
   label: { color: colors.neutral, fontSize: 13, fontWeight: '600', marginBottom: spacing.xs },
-  ajuda: { color: colors.textMuted, fontSize: 12, marginBottom: spacing.sm },
   dataTrigger: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -342,28 +239,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   dataTexto: { fontSize: 16, color: colors.text },
-  preview: {
-    width: '100%',
-    height: 160,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.border,
-  },
-  previewPdf: {
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  previewPdfTexto: { color: colors.text },
-  erroAnexo: { color: colors.danger, fontSize: 12, marginBottom: spacing.sm },
-  anexoBotoes: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  anexoBotao: { flex: 1 },
   salvar: { marginTop: spacing.md, marginBottom: spacing.sm },
 });

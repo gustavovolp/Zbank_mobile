@@ -35,7 +35,6 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         </Text>
         <Text style={styles.categoria}>
           {obterLabelCategoria(transaction.tipo, transaction.categoria)} · {formatarData(transaction.data)}
-          {transaction.anexo ? ' · 📎' : ''}
         </Text>
       </View>
 

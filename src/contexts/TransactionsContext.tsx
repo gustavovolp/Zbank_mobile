@@ -1,4 +1,5 @@
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -13,7 +14,6 @@ import {
   startAfter,
   where,
 } from 'firebase/firestore';
-import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import {
   createContext,
   useCallback,
@@ -24,9 +24,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { db, storage } from '../config/firebase';
-import { type ArquivoSelecionado, validarArquivoAnexo } from '../utils/anexoUtils';
-import type { Anexo, Transaction, TransactionFilters, TransactionInput } from '../types/transaction';
+import { db } from '../config/firebase';
+import type { Transaction, TransactionFilters, TransactionInput } from '../types/transaction';
 import { useAuth } from './AuthContext';
 
 const PAGE_SIZE = 15;
@@ -50,12 +49,8 @@ interface TransactionsContextValue {
   setFilters: (filters: TransactionFilters) => void;
   refresh: () => Promise<void>;
   loadMore: () => Promise<void>;
-  addTransaction: (input: TransactionInput, arquivo?: ArquivoSelecionado | null) => Promise<void>;
-  updateTransaction: (
-    id: string,
-    input: TransactionInput,
-    opcoes?: { novoArquivo?: ArquivoSelecionado | null; removerAnexo?: boolean }
-  ) => Promise<void>;
+  addTransaction: (input: TransactionInput) => Promise<void>;
+  updateTransaction: (id: string, input: TransactionInput) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   getTransactionById: (id: string) => Transaction | undefined;
   resumo: ResumoFinanceiro;
@@ -222,81 +217,30 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     [transactions, filters.busca]
   );
 
-  const uploadAnexo = useCallback(
-    async (transactionId: string, arquivo: ArquivoSelecionado): Promise<Anexo> => {
-      if (!uid) throw new Error('Usuário não autenticado.');
-      const erroValidacao = validarArquivoAnexo(arquivo);
-      if (erroValidacao) throw new Error(erroValidacao);
-
-      const resposta = await fetch(arquivo.uri);
-      const blob = await resposta.blob();
-      const caminho = `receipts/${uid}/${transactionId}/${Date.now()}_${arquivo.nome}`;
-      const storageRef = ref(storage, caminho);
-      await uploadBytes(storageRef, blob, { contentType: arquivo.tipoArquivo });
-      const url = await getDownloadURL(storageRef);
-
-      return {
-        nome: arquivo.nome,
-        tipoArquivo: arquivo.tipoArquivo as Anexo['tipoArquivo'],
-        tamanho: arquivo.tamanho,
-        url,
-      };
-    },
-    [uid]
-  );
-
-  const removerAnexoDoStorage = useCallback(async (anexo?: Anexo | null) => {
-    if (!anexo?.url) return;
-    try {
-      await deleteObject(ref(storage, anexo.url));
-    } catch (err) {
-      console.warn('Não foi possível remover o anexo antigo do Storage:', err);
-    }
-  }, []);
-
   const addTransaction = useCallback(
-    async (input: TransactionInput, arquivo?: ArquivoSelecionado | null) => {
+    async (input: TransactionInput) => {
       if (!uid) throw new Error('Usuário não autenticado.');
 
-      const novoDocRef = doc(collection(db, 'users', uid, 'transactions'));
-      const anexo = arquivo ? await uploadAnexo(novoDocRef.id, arquivo) : null;
-
-      await setDoc(novoDocRef, {
+      await addDoc(collection(db, 'users', uid, 'transactions'), {
         ...input,
-        anexo,
         criadoEm: Date.now(),
       });
 
       await refresh();
     },
-    [uid, uploadAnexo, refresh]
+    [uid, refresh]
   );
 
   const updateTransaction = useCallback(
-    async (
-      id: string,
-      input: TransactionInput,
-      opcoes?: { novoArquivo?: ArquivoSelecionado | null; removerAnexo?: boolean }
-    ) => {
+    async (id: string, input: TransactionInput) => {
       if (!uid) throw new Error('Usuário não autenticado.');
 
       const existente = transactions.find((t) => t.id === id) ?? todasTransacoes.find((t) => t.id === id);
-      let anexo: Anexo | null | undefined = existente?.anexo ?? null;
-
-      if (opcoes?.novoArquivo) {
-        await removerAnexoDoStorage(existente?.anexo);
-        anexo = await uploadAnexo(id, opcoes.novoArquivo);
-      } else if (opcoes?.removerAnexo) {
-        await removerAnexoDoStorage(existente?.anexo);
-        anexo = null;
-      }
-
       const docRef = doc(db, 'users', uid, 'transactions', id);
       await setDoc(
         docRef,
         {
           ...input,
-          anexo,
           criadoEm: existente?.criadoEm ?? Date.now(),
         },
         { merge: true }
@@ -304,18 +248,16 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
 
       await refresh();
     },
-    [uid, transactions, todasTransacoes, uploadAnexo, removerAnexoDoStorage, refresh]
+    [uid, transactions, todasTransacoes, refresh]
   );
 
   const deleteTransaction = useCallback(
     async (id: string) => {
       if (!uid) throw new Error('Usuário não autenticado.');
-      const existente = transactions.find((t) => t.id === id) ?? todasTransacoes.find((t) => t.id === id);
-      await removerAnexoDoStorage(existente?.anexo);
       await deleteDoc(doc(db, 'users', uid, 'transactions', id));
       await refresh();
     },
-    [uid, transactions, todasTransacoes, removerAnexoDoStorage, refresh]
+    [uid, refresh]
   );
 
   const getTransactionById = useCallback(
