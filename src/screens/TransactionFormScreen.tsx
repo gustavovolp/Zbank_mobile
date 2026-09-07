@@ -16,7 +16,7 @@ import { Button } from '../components/Button';
 import { FormField } from '../components/FormField';
 import { SelectField } from '../components/SelectField';
 import { CATEGORIAS_POR_TIPO, sugerirCategoria } from '../constants/categorias';
-import { colors, radius, spacing } from '../constants/theme';
+import { colors, fonts, radius, spacing } from '../constants/theme';
 import { useTransactions } from '../contexts/TransactionsContext';
 import type { AppStackParamList } from '../navigation/types';
 import type { CategoriaValue } from '../constants/categorias';
@@ -212,7 +212,13 @@ export function TransactionFormScreen() {
         <Button label="Salvar" onPress={handleSalvar} loading={salvando} style={styles.salvar} />
 
         {isEdicao && (
-          <Button label="Excluir transação" variant="danger" onPress={handleExcluir} loading={excluindo} />
+          <Button
+            label="Excluir transação"
+            variant="danger"
+            icon="trash"
+            onPress={handleExcluir}
+            loading={excluindo}
+          />
         )}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -223,8 +229,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
   titulo: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontFamily: fonts.heading,
+    fontSize: 20,
     color: colors.text,
     marginBottom: spacing.lg,
   },

@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '../components/Button';
 import { FormField } from '../components/FormField';
-import { colors, spacing } from '../constants/theme';
+import { colors, fonts, spacing } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuthStackParamList } from '../navigation/types';
 
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   titulo: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontFamily: fonts.heading,
+    fontSize: 26,
     color: colors.secondary,
     textAlign: 'center',
     marginBottom: spacing.xs,

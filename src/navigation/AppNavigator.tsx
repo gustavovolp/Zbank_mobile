@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TransactionFormScreen } from '../screens/TransactionFormScreen';
 import { TransactionsListScreen } from '../screens/TransactionsListScreen';
@@ -22,12 +22,15 @@ function Tabs() {
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>🏠</Text> }}
+        options={{ tabBarIcon: ({ color }) => <BootstrapIcon name="house-door-fill" size={20} color={color} /> }}
       />
       <Tab.Screen
         name="Transactions"
         component={TransactionsListScreen}
-        options={{ title: 'Transações', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>📄</Text> }}
+        options={{
+          title: 'Transações',
+          tabBarIcon: ({ color }) => <BootstrapIcon name="receipt" size={20} color={color} />,
+        }}
       />
     </Tab.Navigator>
   );

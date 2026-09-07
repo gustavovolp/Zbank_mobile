@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BootstrapIcon } from './BootstrapIcon';
 import { colors, radius, spacing } from '../constants/theme';
 
 interface SaldoCardProps {
@@ -12,24 +14,34 @@ function formatarMoeda(valor: number): string {
 }
 
 export function SaldoCard({ saldo, receitas, despesas }: SaldoCardProps) {
+  const [oculto, setOculto] = useState(false);
+  const mascara = '••••••';
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Saldo atual</Text>
-      <Text style={[styles.saldo, saldo < 0 && styles.saldoNegativo]}>{formatarMoeda(saldo)}</Text>
+      <View style={styles.labelLinha}>
+        <Text style={styles.label}>Saldo atual</Text>
+        <Pressable onPress={() => setOculto((v) => !v)} hitSlop={8}>
+          <BootstrapIcon name={oculto ? 'eye-slash' : 'eye'} size={16} color="rgba(255,255,255,0.8)" />
+        </Pressable>
+      </View>
+      <Text style={[styles.saldo, saldo < 0 && !oculto && styles.saldoNegativo]}>
+        {oculto ? mascara : formatarMoeda(saldo)}
+      </Text>
 
       <View style={styles.linha}>
         <View style={styles.item}>
           <View style={[styles.dot, { backgroundColor: colors.success }]} />
           <View>
             <Text style={styles.itemLabel}>Receitas</Text>
-            <Text style={styles.itemValor}>{formatarMoeda(receitas)}</Text>
+            <Text style={styles.itemValor}>{oculto ? mascara : formatarMoeda(receitas)}</Text>
           </View>
         </View>
         <View style={styles.item}>
           <View style={[styles.dot, { backgroundColor: colors.danger }]} />
           <View>
             <Text style={styles.itemLabel}>Despesas</Text>
-            <Text style={styles.itemValor}>{formatarMoeda(despesas)}</Text>
+            <Text style={styles.itemValor}>{oculto ? mascara : formatarMoeda(despesas)}</Text>
           </View>
         </View>
       </View>
@@ -44,10 +56,15 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
+  labelLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
   label: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
-    marginBottom: spacing.xs,
   },
   saldo: {
     color: colors.white,

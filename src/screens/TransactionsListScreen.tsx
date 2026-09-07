@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { Button } from '../components/Button';
 import { SelectField } from '../components/SelectField';
 import { TransactionItem } from '../components/TransactionItem';
@@ -67,17 +68,26 @@ export function TransactionsListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TextInput
-          value={busca}
-          onChangeText={aplicarBusca}
-          placeholder="Buscar por descrição..."
-          placeholderTextColor={colors.textMuted}
-          style={styles.busca}
-        />
+        <View style={styles.buscaContainer}>
+          <BootstrapIcon name="search" size={16} color={colors.textMuted} />
+          <TextInput
+            value={busca}
+            onChangeText={aplicarBusca}
+            placeholder="Buscar por descrição..."
+            placeholderTextColor={colors.textMuted}
+            style={styles.busca}
+          />
+          {busca.length > 0 && (
+            <Pressable onPress={() => aplicarBusca('')} hitSlop={8}>
+              <BootstrapIcon name="x-lg" size={14} color={colors.textMuted} />
+            </Pressable>
+          )}
+        </View>
         <Pressable
           style={[styles.filtroBotao, filtrosAtivos && styles.filtroBotaoAtivo]}
           onPress={abrirFiltros}
         >
+          <BootstrapIcon name="funnel" size={16} color={filtrosAtivos ? colors.white : colors.text} />
           <Text style={[styles.filtroTexto, filtrosAtivos && styles.filtroTextoAtivo]}>Filtros</Text>
         </Pressable>
       </View>
@@ -115,7 +125,7 @@ export function TransactionsListScreen() {
         style={styles.fab}
         onPress={() => navigation.navigate('TransactionForm', undefined)}
       >
-        <Text style={styles.fabTexto}>+</Text>
+        <BootstrapIcon name="plus-lg" size={22} color={colors.white} />
       </Pressable>
 
       <Modal visible={filtrosAbertos} animationType="slide" transparent onRequestClose={() => setFiltrosAbertos(false)}>
@@ -172,17 +182,26 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: spacing.sm,
   },
-  busca: {
+  buscaContainer: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
+  },
+  busca: {
+    flex: 1,
     paddingVertical: spacing.sm,
     color: colors.text,
   },
   filtroBotao: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -233,12 +252,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-  },
-  fabTexto: {
-    color: colors.white,
-    fontSize: 28,
-    lineHeight: 30,
-    fontWeight: '700',
   },
   backdrop: {
     flex: 1,

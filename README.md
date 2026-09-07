@@ -15,9 +15,11 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 ## Funcionalidades
 
 - **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication).
-- **Dashboard**: saldo atual, total de receitas e despesas, gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
+- **Dashboard**: saldo atual (com opção de ocultar o valor, como no Zbank web), total de receitas e despesas, gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
 - **Listagem de transações**: scroll infinito (paginação no Cloud Firestore), busca por descrição, filtros por tipo, categoria e intervalo de datas.
 - **Adicionar/editar transação**: validação avançada (valor, categoria, descrição), sugestão automática de categoria a partir da descrição, exclusão de transação.
+- **Dados de exemplo automáticos**: ao criar uma conta, o app já popula a coleção do usuário com algumas transações de exemplo, para o dashboard e a listagem não aparecerem vazios na primeira vez que a pessoa entra.
+- Identidade visual reaproveitada do [Zbank web](https://github.com/gustavovolp/Zbank): mesma paleta de cores, fonte Orbitron nos títulos/logo e ícones da biblioteca [Bootstrap Icons](https://icons.getbootstrap.com/) (mesma dependência já usada no repositório web).
 - Estado global via **Context API** (`AuthContext` para autenticação, `TransactionsContext` para as transações).
 
 ---
@@ -29,6 +31,7 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 - [Firebase](https://firebase.google.com/) (Authentication, Cloud Firestore)
 - [react-native-chart-kit](https://github.com/indiespirit/react-native-chart-kit) + `react-native-svg`
 - `@react-native-community/datetimepicker`
+- Ícones: path data da biblioteca [bootstrap-icons](https://icons.getbootstrap.com/) renderizada via `react-native-svg` (componente `BootstrapIcon`)
 
 ---
 
@@ -141,10 +144,12 @@ zbank-mobile/
 │   │   ├── DashboardScreen.tsx
 │   │   ├── TransactionsListScreen.tsx
 │   │   └── TransactionFormScreen.tsx
-│   ├── components/                # Button, FormField, SelectField, SaldoCard, TransactionItem
+│   ├── components/                # Button, FormField, SelectField, SaldoCard, TransactionItem, BootstrapIcon
 │   ├── constants/
 │   │   ├── categorias.ts          # categorias por tipo + sugestão automática por descrição
-│   │   └── theme.ts               # cores e tipografia do design system Zbank
+│   │   ├── theme.ts               # cores e tipografia do design system Zbank
+│   │   └── bootstrapIcons.ts      # path data dos ícones (bootstrap-icons)
+│   ├── utils/seedDemoData.ts      # transações de exemplo criadas no primeiro cadastro
 │   └── types/transaction.ts
 └── .env.example
 ```
@@ -179,7 +184,7 @@ Reaproveita a identidade visual do [Zbank web](https://github.com/gustavovolp/Zb
 | `secondary` | `#502588` |
 | `neutral` | `#4A4949` |
 
-Fonte de destaque: Orbitron (logo/títulos).
+Fonte de destaque: Orbitron (logo/títulos). Ícones: [Bootstrap Icons](https://icons.getbootstrap.com/), a mesma biblioteca já listada como dependência no Zbank web.
 
 ---
 

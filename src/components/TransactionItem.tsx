@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BootstrapIcon } from './BootstrapIcon';
 import { colors, radius, spacing } from '../constants/theme';
 import { obterLabelCategoria } from '../constants/categorias';
 import type { Transaction } from '../types/transaction';
@@ -23,11 +24,11 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
-      <View style={[styles.icone, { backgroundColor: isDeposito ? '#E4F8EE' : '#FDEBEA' }]}>
-        <Text style={{ color: isDeposito ? colors.success : colors.danger, fontWeight: '800' }}>
-          {isDeposito ? '+' : '-'}
-        </Text>
-      </View>
+      <BootstrapIcon
+        name={isDeposito ? 'arrow-down-circle-fill' : 'arrow-up-circle-fill'}
+        size={32}
+        color={isDeposito ? colors.success : colors.danger}
+      />
 
       <View style={styles.info}>
         <Text style={styles.descricao} numberOfLines={1}>
@@ -54,13 +55,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
     gap: spacing.sm,
-  },
-  icone: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   info: {
     flex: 1,

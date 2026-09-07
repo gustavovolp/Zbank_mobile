@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import { SaldoCard } from '../components/SaldoCard';
-import { colors, radius, spacing } from '../constants/theme';
+import { colors, fonts, radius, spacing } from '../constants/theme';
 import { obterLabelCategoria, type CategoriaValue } from '../constants/categorias';
 import { useAuth } from '../contexts/AuthContext';
 import { useTransactions } from '../contexts/TransactionsContext';
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   cardTitulo: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.heading,
+    fontSize: 15,
     color: colors.text,
     marginBottom: spacing.md,
   },

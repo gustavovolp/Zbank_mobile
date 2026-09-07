@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BootstrapIcon } from './BootstrapIcon';
 import { colors, radius, spacing } from '../constants/theme';
 
 export interface SelectOption {
@@ -30,6 +31,7 @@ export function SelectField({ label, value, options, onChange, placeholder = 'Se
         <Text style={selecionado ? styles.value : styles.placeholder}>
           {selecionado?.label ?? placeholder}
         </Text>
+        <BootstrapIcon name="chevron-down" size={14} color={colors.textMuted} />
       </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -65,6 +67,9 @@ const styles = StyleSheet.create({
   container: { marginBottom: spacing.md },
   label: { color: colors.neutral, fontSize: 13, fontWeight: '600', marginBottom: spacing.xs },
   trigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.sm,

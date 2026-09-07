@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { auth } from '../config/firebase';
+import { seedDemoTransactions } from '../utils/seedDemoData';
 
 interface AuthContextValue {
   user: User | null;
@@ -67,6 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (nome.trim()) {
             await updateProfile(credencial.user, { displayName: nome.trim() });
           }
+          seedDemoTransactions(credencial.user.uid).catch((err) =>
+            console.warn('Não foi possível popular dados de exemplo:', err)
+          );
         } catch (error) {
           throw new Error(mapAuthError(error));
         }

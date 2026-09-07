@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { Button } from '../components/Button';
 import { FormField } from '../components/FormField';
-import { colors, spacing } from '../constants/theme';
+import { colors, fonts, spacing } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuthStackParamList } from '../navigation/types';
 
@@ -38,7 +39,10 @@ export function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.logo}>Zbank</Text>
+        <View style={styles.logoLinha}>
+          <BootstrapIcon name="wallet2" size={28} color={colors.primary} />
+          <Text style={styles.logo}>Zbank</Text>
+        </View>
         <Text style={styles.subtitulo}>Gerenciamento financeiro na palma da mão</Text>
 
         <View style={styles.form}>
@@ -81,12 +85,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  logo: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: colors.primary,
-    textAlign: 'center',
+  logoLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  logo: {
+    fontFamily: fonts.heading,
+    fontSize: 36,
+    color: colors.primary,
   },
   subtitulo: {
     textAlign: 'center',
