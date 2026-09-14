@@ -3,7 +3,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +17,7 @@ import { SelectField } from '../components/SelectField';
 import { CATEGORIAS_POR_TIPO, sugerirCategoria } from '../constants/categorias';
 import { colors, fonts, radius, spacing } from '../constants/theme';
 import { useTransactions } from '../contexts/TransactionsContext';
+import { alertarAcao, confirmarAcao } from '../utils/confirm';
 import type { AppStackParamList } from '../navigation/types';
 import type { CategoriaValue } from '../constants/categorias';
 import type { TransactionType } from '../types/transaction';
@@ -130,32 +130,30 @@ export function TransactionFormScreen() {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Erro ao salvar', err instanceof Error ? err.message : 'Tente novamente.');
+      alertarAcao('Erro ao salvar', err instanceof Error ? err.message : 'Tente novamente.');
     } finally {
       setSalvando(false);
     }
   }
 
-  function handleExcluir() {
+  async function handleExcluir() {
     if (!transactionId) return;
-    Alert.alert('Excluir transação', 'Tem certeza que deseja excluir esta transação?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          setExcluindo(true);
-          try {
-            await deleteTransaction(transactionId);
-            navigation.goBack();
-          } catch (err) {
-            Alert.alert('Erro ao excluir', err instanceof Error ? err.message : 'Tente novamente.');
-          } finally {
-            setExcluindo(false);
-          }
-        },
-      },
-    ]);
+    const confirmou = await confirmarAcao(
+      'Excluir transação',
+      'Tem certeza que deseja excluir esta transação?',
+      'Excluir'
+    );
+    if (!confirmou) return;
+
+    setExcluindo(true);
+    try {
+      await deleteTransaction(transactionId);
+      navigation.goBack();
+    } catch (err) {
+      alertarAcao('Erro ao excluir', err instanceof Error ? err.message : 'Tente novamente.');
+    } finally {
+      setExcluindo(false);
+    }
   }
 
   return (

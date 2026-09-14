@@ -1,12 +1,12 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Alert } from 'react-native';
 import { BootstrapIcon } from '../components/BootstrapIcon';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TransactionFormScreen } from '../screens/TransactionFormScreen';
 import { TransactionsListScreen } from '../screens/TransactionsListScreen';
 import { colors } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { confirmarAcao } from '../utils/confirm';
 import type { AppStackParamList, TabsParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabsParamList>();
@@ -19,11 +19,9 @@ function LogoutPlaceholder() {
 function Tabs() {
   const { logout } = useAuth();
 
-  function confirmarLogout() {
-    Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => logout() },
-    ]);
+  async function confirmarLogout() {
+    const confirmou = await confirmarAcao('Sair', 'Deseja realmente sair da sua conta?', 'Sair');
+    if (confirmou) await logout();
   }
 
   return (
