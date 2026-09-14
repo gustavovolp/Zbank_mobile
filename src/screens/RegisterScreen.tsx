@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { FormField } from '../components/FormField';
 import { colors, fonts, spacing } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { validarSenha } from '../utils/senha';
 import type { AuthStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -25,8 +26,9 @@ export function RegisterScreen({ navigation }: Props) {
       setErro('Preencha todos os campos para criar sua conta.');
       return;
     }
-    if (senha.length < 6) {
-      setErro('A senha precisa ter pelo menos 6 caracteres.');
+    const erroSenha = validarSenha(senha);
+    if (erroSenha) {
+      setErro(erroSenha);
       return;
     }
     if (senha !== confirmarSenha) {
@@ -64,10 +66,13 @@ export function RegisterScreen({ navigation }: Props) {
             label="Senha"
             value={senha}
             onChangeText={setSenha}
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mín. 6 caracteres, 1 maiúscula, 1 especial"
             secureTextEntry
             autoCapitalize="none"
           />
+          <Text style={styles.dicaSenha}>
+            Use pelo menos 6 caracteres, com 1 letra maiúscula e 1 caractere especial (ex: !@#$%).
+          </Text>
           <FormField
             label="Confirmar senha"
             value={confirmarSenha}
@@ -110,6 +115,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: colors.textMuted,
     marginBottom: spacing.xl,
+  },
+  dicaSenha: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
   },
   form: {
     backgroundColor: colors.surface,
