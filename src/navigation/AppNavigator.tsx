@@ -1,16 +1,31 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Alert } from 'react-native';
 import { BootstrapIcon } from '../components/BootstrapIcon';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TransactionFormScreen } from '../screens/TransactionFormScreen';
 import { TransactionsListScreen } from '../screens/TransactionsListScreen';
 import { colors } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 import type { AppStackParamList, TabsParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabsParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+function LogoutPlaceholder() {
+  return null;
+}
+
 function Tabs() {
+  const { logout } = useAuth();
+
+  function confirmarLogout() {
+    Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => logout() },
+    ]);
+  }
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -30,6 +45,20 @@ function Tabs() {
         options={{
           title: 'Transações',
           tabBarIcon: ({ color }) => <BootstrapIcon name="receipt" size={20} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Logout"
+        component={LogoutPlaceholder}
+        options={{
+          title: 'Sair',
+          tabBarIcon: ({ color }) => <BootstrapIcon name="box-arrow-right" size={20} color={color} />,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            confirmarLogout();
+          },
         }}
       />
     </Tab.Navigator>

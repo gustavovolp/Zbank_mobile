@@ -6,6 +6,7 @@ export type AuthStackParamList = {
 export type TabsParamList = {
   Dashboard: undefined;
   Transactions: undefined;
+  Logout: undefined;
 };
 
 export type AppStackParamList = {
