@@ -1,5 +1,3 @@
-// Path data extraída de bootstrap-icons (MIT) — https://icons.getbootstrap.com/
-// Mesma biblioteca de ícones já usada como dependência no Zbank web.
 export interface IconPathDef {
   d: string;
   fillRule?: 'evenodd' | 'nonzero';

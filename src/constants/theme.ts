@@ -15,7 +15,7 @@ export const colors = {
 export const fonts = {
   heading: 'Orbitron_700Bold',
   headingRegular: 'Orbitron_400Regular',
-  body: undefined, // fonte padrão do sistema (equivalente ao Geist Sans do web)
+  body: undefined,
 } as const;
 
 export const spacing = {

@@ -6,10 +6,10 @@ export interface Transaction {
   id: string;
   valor: number;
   tipo: TransactionType;
-  data: string; // ISO date (yyyy-MM-dd)
+  data: string;
   descricao: string;
   categoria: CategoriaValue;
-  criadoEm: number; // epoch ms, usado como cursor estável de paginação
+  criadoEm: number;
 }
 
 export interface TransactionInput {

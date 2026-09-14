@@ -29,10 +29,6 @@ assertFirebaseConfig();
 export const app: FirebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 function createAuth(): Auth {
-  // No web (usado só para smoke-test em `expo start --web`), o SDK já persiste
-  // a sessão via localStorage/indexedDB por padrão. No nativo (iOS/Android),
-  // a persistência precisa ser configurada explicitamente com AsyncStorage —
-  // exportado apenas na condição "react-native" do pacote firebase/auth.
   if (Platform.OS === 'web') {
     return getAuth(app);
   }

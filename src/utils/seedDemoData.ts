@@ -30,8 +30,6 @@ function paraDataISO(diasAtras: number): string {
   return data.toISOString().slice(0, 10);
 }
 
-// Popula a conta recém-criada com transações de exemplo, para o dashboard e a
-// listagem já aparecerem com dados na primeira vez que a pessoa entra no app.
 export async function seedDemoTransactions(uid: string): Promise<void> {
   const col = collection(db, 'users', uid, 'transactions');
   const agora = Date.now();

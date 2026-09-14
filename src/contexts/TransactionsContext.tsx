@@ -169,7 +169,6 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         console.error(err);
       })
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, filters]);
 
   useEffect(() => {
