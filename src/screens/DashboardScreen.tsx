@@ -68,7 +68,7 @@ export function DashboardScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.saudacao}>Olá, {nomeUsuario} 👋</Text>
+      <Text style={styles.saudacao}>Olá, {nomeUsuario} </Text>
 
       <SaldoCard saldo={resumo.saldo} />
 
