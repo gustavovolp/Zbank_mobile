@@ -15,7 +15,7 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 ## Funcionalidades
 
 - **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication). No cadastro, a senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 caractere especial. Há uma aba dedicada ("Sair") para encerrar a sessão a qualquer momento.
-- **Dashboard**: saldo atual (com opção de ocultar o valor, como no Zbank web), total de receitas e despesas, gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
+- **Dashboard**: saldo atual (com opção de ocultar o valor, como no Zbank web), gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
 - **Listagem de transações**: scroll infinito (paginação no Cloud Firestore), busca por descrição, filtros por tipo, categoria e intervalo de datas.
 - **Adicionar/editar transação**: validação avançada (valor, categoria, descrição), sugestão automática de categoria a partir da descrição, exclusão de transação.
 - **Dados de exemplo automáticos**: ao criar uma conta, o app já popula a coleção do usuário com algumas transações de exemplo, para o dashboard e a listagem não aparecerem vazios na primeira vez que a pessoa entra.

@@ -70,7 +70,7 @@ export function DashboardScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.saudacao}>Olá, {nomeUsuario} 👋</Text>
 
-      <SaldoCard saldo={resumo.saldo} receitas={resumo.receitas} despesas={resumo.despesas} />
+      <SaldoCard saldo={resumo.saldo} />
 
       <View style={styles.segmentado}>
         <Pressable
