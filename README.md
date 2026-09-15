@@ -14,7 +14,7 @@ Zbank Mobile é a versão mobile do Zbank (o app web do Zbank pode ser encontrad
 
 ## Funcionalidades
 
-- **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication). No cadastro, a senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 caractere especial.
+- **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication). No cadastro, a senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 caractere especial. Há uma aba dedicada ("Sair") para encerrar a sessão a qualquer momento.
 - **Dashboard**: saldo atual (com opção de ocultar o valor, como no Zbank web), total de receitas e despesas, gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`) entre a seção de resumo e a de gráficos.
 - **Listagem de transações**: scroll infinito (paginação no Cloud Firestore), busca por descrição, filtros por tipo, categoria e intervalo de datas.
 - **Adicionar/editar transação**: validação avançada (valor, categoria, descrição), sugestão automática de categoria a partir da descrição, exclusão de transação.
@@ -53,10 +53,9 @@ O app depende de um projeto Firebase próprio (Authentication + Firestore, ambos
 3. Vá em **Build > Firestore Database** → **Criar banco de dados** → inicie em **modo de produção** (as regras de segurança abaixo liberam o acesso correto) → escolha a região mais próxima.
 4. Ainda no console, vá em **Configurações do projeto** (ícone de engrenagem) → aba **Geral** → em "Seus apps", clique no ícone **`</>`** (Web) para registrar um app Web (mesmo sendo um app mobile, o SDK JS do Firebase usa a config de um "app Web"). Dê um apelido e finalize — não precisa configurar Hosting.
 5. Copie os valores do objeto `firebaseConfig` exibido (apiKey, authDomain, projectId, messagingSenderId, appId).
+6. **Obrigatório**: em **Firestore Database → Regras**, substitua o conteúdo pelo bloco abaixo e clique em **Publicar**.
 
-### Regras de segurança
-
-Em **Firestore Database > Regras**, substitua pelo conteúdo abaixo (garante que cada usuário só acesse as próprias transações) e publique:
+> ⚠️ Sem esse passo o app não funciona: no modo de produção, o Firestore nega qualquer leitura/escrita por padrão até que uma regra libere o acesso. Pular esta etapa faz login e cadastro funcionarem normalmente, mas toda operação de transação (criar conta já popula dados de exemplo, listar, adicionar, editar) falha com erro de permissão.
 
 ```
 rules_version = '2';
@@ -119,7 +118,7 @@ Isso abre o Metro Bundler no terminal com um QR code. Para rodar:
 - **Simulador iOS** (necessário macOS): pressione `i` no terminal.
 - **Web** (smoke-test, funcionalidade limitada — o date picker nativo pode não funcionar no navegador): `npm run web`.
 
-Na primeira execução, crie uma conta pela tela **"Criar conta"** (não há usuário de demonstração pré-cadastrado, já que o projeto Firebase é criado do zero por quem for rodar o app).
+Na primeira execução, crie uma conta pela tela **"Criar conta"** (não há usuário de demonstração pré-cadastrado, já que o projeto Firebase é criado do zero por quem for rodar o app). Logo após o cadastro, o Dashboard e a lista de Transações já aparecem preenchidos com ~10 lançamentos de exemplo, criados automaticamente para não começar vazio.
 
 ---
 
@@ -149,7 +148,10 @@ zbank-mobile/
 │   │   ├── categorias.ts          # categorias por tipo + sugestão automática por descrição
 │   │   ├── theme.ts               # cores e tipografia do design system Zbank
 │   │   └── bootstrapIcons.ts      # path data dos ícones (bootstrap-icons)
-│   ├── utils/seedDemoData.ts      # transações de exemplo criadas no primeiro cadastro
+│   ├── utils/
+│   │   ├── seedDemoData.ts        # transações de exemplo criadas no primeiro cadastro
+│   │   ├── senha.ts               # validação de força da senha no cadastro
+│   │   └── confirm.ts             # diálogos de confirmação (compatível com web e nativo)
 │   └── types/transaction.ts
 └── .env.example
 ```
@@ -193,6 +195,22 @@ Fonte de destaque: Orbitron (logo/títulos). Ícones: [Bootstrap Icons](https://
 - **Upload de recibos (Firebase Storage) não foi implementado** — desde o final de 2024 o Firebase só libera o Storage em projetos com o plano pago Blaze (exige cartão cadastrado). Como a prioridade era manter o projeto inteiramente gratuito, essa funcionalidade específica do desafio ficou de fora; todo o restante (dashboard, autenticação, listagem paginada/filtrada, CRUD de transações) está implementado e funcional.
 - A busca por descrição na listagem é aplicada sobre a página de transações já carregada (client-side), não sobre toda a coleção — o Cloud Firestore não oferece busca full-text nativa. Filtros de tipo, categoria e intervalo de datas, por outro lado, são aplicados diretamente na consulta ao Firestore.
 - Se os filtros de categoria/tipo forem combinados e o Firestore pedir a criação de um índice composto (mensagem de erro com um link), basta abrir o link indicado no console para criá-lo automaticamente.
+
+---
+
+## Roteiro de teste rápido
+
+Depois de configurar o Firebase e rodar o app (seções acima), siga esta ordem para validar todas as funcionalidades:
+
+1. **Cadastro**: toque em "Criar conta", preencha nome/e-mail/senha (teste uma senha fraca primeiro pra ver a validação bloqueando) e confirme. Deve cair direto no Dashboard, já com ~10 transações de exemplo.
+2. **Dashboard**: alterne entre "Resumo" e "Gráficos" (transição animada) e toque no ícone de olho pra ocultar/mostrar o saldo.
+3. **Listagem**: vá na aba "Transações", teste a busca por descrição e abra o filtro (ícone de funil) para filtrar por tipo, categoria e intervalo de datas.
+4. **Adicionar**: toque no botão "+", tente salvar o formulário vazio (deve mostrar os erros de validação), depois preencha e salve uma transação nova.
+5. **Editar**: abra a transação recém-criada na lista, altere algum campo e salve de novo.
+6. **Excluir**: exclua uma transação pelo botão na tela de edição.
+7. **Conferência no Firebase**: abra o Firestore Database no console e confira que os documentos em `users/{uid}/transactions` batem com o que aparece no app.
+8. **Logout**: toque na aba "Sair", confirme, e verifique que volta para a tela de Login.
+9. **Login novamente**: entre com a mesma conta e confirme que os dados persistiram.
 
 ---
 
