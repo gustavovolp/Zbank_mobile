@@ -32,7 +32,7 @@ A Fase 4 não adiciona telas novas: ela **reestrutura o app por dentro** para fi
 ## Funcionalidades
 
 - **Autenticação**: login e criação de conta com e-mail/senha (Firebase Authentication). No cadastro, a senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 caractere especial. Há uma aba dedicada ("Sair") para encerrar a sessão.
-- **Dashboard**: saldo atual (com opção de ocultar o valor), resumo por categoria e gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`).
+- **Dashboard**: saldo atual (com opção de ocultar o valor), botão **Nova transação** para lançar direto da tela inicial, resumo por categoria e gráficos de receitas x despesas e de gastos por categoria, com transição animada (`Animated`).
 - **Listagem de transações**: scroll infinito (paginação no Cloud Firestore), busca por descrição, filtros por tipo, categoria e intervalo de datas (com validação).
 - **Adicionar/editar/excluir transação**: validação avançada (valor, categoria, descrição, data) e sugestão automática de categoria a partir da descrição.
 - **Dados de exemplo automáticos**: toda conta nova já recebe ~10 transações de exemplo, para o dashboard e a listagem não começarem vazios.
@@ -277,7 +277,7 @@ Depois de configurar o Firebase e rodar o app, siga esta ordem para validar tudo
 1. **Cadastro**: toque em "Criar conta", preencha nome/e-mail/senha (teste uma senha fraca primeiro para ver a validação bloqueando) e confirme. Deve cair no Dashboard, já com ~10 transações de exemplo (e a aba "Transações" também já preenchida).
 2. **Dashboard**: alterne entre "Resumo" e "Gráficos" (transição animada; os gráficos são carregados sob demanda) e toque no ícone de olho para ocultar/mostrar o saldo.
 3. **Listagem**: na aba "Transações", teste a busca (digite rápido: o filtro só roda após uma pausa) e abra o filtro (funil) para filtrar por tipo, categoria e datas — tente uma data inválida ou intervalo invertido para ver a validação.
-4. **Adicionar**: toque em "+", tente salvar vazio (erros de validação), depois preencha e salve (ex.: descrição "Uber" sugere a categoria Transporte).
+4. **Adicionar**: toque em "Nova transação" no Dashboard (ou em "+" na aba Transações), tente salvar vazio (erros de validação), depois preencha e salve (ex.: descrição "Uber" sugere a categoria Transporte).
 5. **Editar / Excluir**: abra a transação criada, altere e salve; depois exclua.
 6. **Cache**: feche o app completamente e abra de novo — o Dashboard já aparece com os dados do cache criptografado enquanto os dados ao vivo chegam.
 7. **Conferência no Firebase**: no Firestore Database, confira os documentos em `users/{uid}/transactions`.

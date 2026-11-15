@@ -1,6 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppSelector } from '@/shell/hooks';
+import type { AppStackParamList } from '@/shell/navigation/types';
+import { Button } from '@/core/presentation/components/Button';
 import { colors, fonts, radius, spacing } from '@/core/presentation/theme';
 import { findCategoryLabel } from '@/modules/transactions/domain/categories';
 import { selectSummary } from '@/modules/transactions/presentation/state/selectors';
@@ -14,6 +18,7 @@ function formatarMoeda(valor: number): string {
 }
 
 export function DashboardScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const summary = useAppSelector(selectSummary);
   const recentStatus = useAppSelector((state) => state.transactions.recentStatus);
   const recentError = useAppSelector((state) => state.transactions.recentError);
@@ -42,6 +47,13 @@ export function DashboardScreen() {
       <Text style={styles.saudacao}>Olá, {nomeUsuario}</Text>
 
       <SaldoCard saldo={summary.saldo} />
+
+      <Button
+        label="Nova transação"
+        icon="plus-lg"
+        onPress={() => navigation.navigate('TransactionForm', undefined)}
+        style={styles.novaTransacao}
+      />
 
       <View style={styles.segmentado}>
         <Pressable
@@ -95,6 +107,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.md,
+  },
+  novaTransacao: {
+    marginBottom: spacing.lg,
   },
   segmentado: {
     flexDirection: 'row',
