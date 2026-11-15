@@ -1,14 +1,17 @@
+import { Orbitron_400Regular, Orbitron_700Bold, useFonts } from '@expo-google-fonts/orbitron';
 import { NavigationContainer } from '@react-navigation/native';
-import { useFonts, Orbitron_700Bold, Orbitron_400Regular } from '@expo-google-fonts/orbitron';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from './src/contexts/AuthContext';
-import { RootNavigator } from './src/navigation/RootNavigator';
-import { colors } from './src/constants/theme';
+import { Provider } from 'react-redux';
+import { AppBootstrap } from '@/shell/AppBootstrap';
+import { store } from '@/shell/appStore';
+import { RootNavigator } from '@/shell/navigation/RootNavigator';
+import { container } from '@/core/di/container';
+import { colors } from '@/core/presentation/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -31,12 +34,14 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-          <StatusBar style="dark" />
-        </AuthProvider>
+        <Provider store={store}>
+          <AppBootstrap dependencies={container}>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+            <StatusBar style="dark" />
+          </AppBootstrap>
+        </Provider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
