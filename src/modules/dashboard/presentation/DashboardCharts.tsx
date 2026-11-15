@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import { colors, fonts, radius, spacing } from '@/core/presentation/theme';
-import { findCategoryLabel, isCategoryOfType } from '@/modules/transactions/domain/categories';
-import type { FinancialSummary } from '@/modules/transactions/domain/summary';
+import { findCategoryLabel, type FinancialSummary } from '@/modules/transactions';
 
 const LARGURA_TELA = Dimensions.get('window').width;
 const LARGURA_GRAFICO = LARGURA_TELA - spacing.lg * 4;
@@ -33,8 +32,7 @@ export function DashboardCharts({ summary }: DashboardChartsProps) {
 
   const dadosPizza = useMemo(
     () =>
-      Object.entries(summary.porCategoria)
-        .filter(([categoria]) => isCategoryOfType('transferencia', categoria))
+      Object.entries(summary.despesasPorCategoria)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 6)
         .map(([categoria, valor], index) => ({
@@ -44,7 +42,7 @@ export function DashboardCharts({ summary }: DashboardChartsProps) {
           legendFontColor: colors.text,
           legendFontSize: 12,
         })),
-    [summary.porCategoria]
+    [summary.despesasPorCategoria]
   );
 
   if (summary.receitas === 0 && summary.despesas === 0) {

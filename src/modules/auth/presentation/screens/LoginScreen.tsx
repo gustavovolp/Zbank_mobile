@@ -1,8 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { AuthStackParamList } from '@/shell/navigation/types';
-import { useAppDispatch } from '@/shell/hooks';
+import type { AuthStackParamList } from '@/core/presentation/navigation/types';
+import { useAppDispatch } from '@/core/presentation/store/hooks';
 import { BootstrapIcon } from '@/core/presentation/components/BootstrapIcon';
 import { Button } from '@/core/presentation/components/Button';
 import { FormField } from '@/core/presentation/components/FormField';

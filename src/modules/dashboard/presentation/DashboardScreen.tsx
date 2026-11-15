@@ -2,12 +2,11 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useAppSelector } from '@/shell/hooks';
-import type { AppStackParamList } from '@/shell/navigation/types';
+import { useAppSelector } from '@/core/presentation/store/hooks';
+import type { AppStackParamList } from '@/core/presentation/navigation/types';
 import { Button } from '@/core/presentation/components/Button';
 import { colors, fonts, radius, spacing } from '@/core/presentation/theme';
-import { findCategoryLabel } from '@/modules/transactions/domain/categories';
-import { selectSummary } from '@/modules/transactions/presentation/state/selectors';
+import { findCategoryLabel, selectSummary } from '@/modules/transactions';
 import { LazyDashboardCharts } from './LazyDashboardCharts';
 import { SaldoCard } from './SaldoCard';
 

@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import type { AppDependencies } from '@/core/di/dependencies';
-import { authStateChanged } from '@/modules/auth/presentation/state/authSlice';
-import { useAppDispatch, useAppSelector } from './hooks';
+import { authStateChanged } from '@/modules/auth';
+import { useAppDispatch, useAppSelector } from '@/core/presentation/store/hooks';
 import { startUserSession } from './session';
 
 interface AppBootstrapProps {

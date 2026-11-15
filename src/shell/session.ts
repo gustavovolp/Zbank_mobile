@@ -1,5 +1,5 @@
 import { Subject, Subscription, debounceTime } from 'rxjs';
-import type { AppDependencies } from '@/core/di/dependencies';
+import type { AppDependencies, AppDispatch } from '@/core/presentation/store/registry';
 import { getErrorMessage } from '@/core/presentation/errorMessage';
 import {
   fetchFirstPage,
@@ -8,8 +8,7 @@ import {
   recentStarted,
   sessionReset,
   syncList,
-} from '@/modules/transactions/presentation/state/transactionsSlice';
-import type { AppDispatch } from './store';
+} from '@/modules/transactions';
 
 export interface SessionOptions {
   syncDebounceMs?: number;
@@ -33,7 +32,7 @@ export function startUserSession(
   );
 
   subscriptions.add(
-    dependencies.transactions.observeRecent.execute(uid, dependencies.config.recentLimit).subscribe({
+    dependencies.transactions.observeRecent.execute(uid, dependencies.transactionsConfig.recentLimit).subscribe({
       next: (transactions) => {
         dispatch(recentReceived(transactions));
         changes$.next();

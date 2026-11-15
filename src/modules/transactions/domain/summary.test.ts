@@ -8,7 +8,13 @@ function tx(partial: Partial<Transaction> & Pick<Transaction, 'id' | 'valor' | '
 
 describe('calculateSummary', () => {
   it('retorna zeros para lista vazia', () => {
-    expect(calculateSummary([])).toEqual({ saldo: 0, receitas: 0, despesas: 0, porCategoria: {} });
+    expect(calculateSummary([])).toEqual({
+      saldo: 0,
+      receitas: 0,
+      despesas: 0,
+      porCategoria: {},
+      despesasPorCategoria: {},
+    });
   });
 
   it('soma receitas, despesas e agrupa por categoria', () => {
@@ -22,6 +28,17 @@ describe('calculateSummary', () => {
     expect(summary.despesas).toBe(250);
     expect(summary.saldo).toBe(750);
     expect(summary.porCategoria).toEqual({ salario: 1000, alimentacao: 250 });
+  });
+
+  it('separa as categorias de despesa (regra de negócio usada pelo gráfico de gastos)', () => {
+    const summary = calculateSummary([
+      tx({ id: '1', valor: 1000, tipo: 'deposito', categoria: 'salario' }),
+      tx({ id: '2', valor: 200, tipo: 'transferencia', categoria: 'alimentacao' }),
+      tx({ id: '3', valor: 50, tipo: 'transferencia', categoria: 'alimentacao' }),
+      tx({ id: '4', valor: 30, tipo: 'transferencia', categoria: 'lazer' }),
+    ]);
+
+    expect(summary.despesasPorCategoria).toEqual({ alimentacao: 250, lazer: 30 });
   });
 
   it('evita erro de ponto flutuante somando em centavos', () => {

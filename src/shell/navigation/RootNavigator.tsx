@@ -1,5 +1,5 @@
 import { ActivityIndicator, View } from 'react-native';
-import { useAppSelector } from '@/shell/hooks';
+import { useAppSelector } from '@/core/presentation/store/hooks';
 import { colors } from '@/core/presentation/theme';
 import { AppNavigator } from './AppNavigator';
 import { AuthStack } from './AuthStack';

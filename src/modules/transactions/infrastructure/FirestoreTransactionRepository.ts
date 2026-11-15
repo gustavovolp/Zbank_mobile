@@ -26,6 +26,7 @@ import type {
   TransactionPage,
 } from '../domain/entities';
 import type { TransactionRepository } from '../domain/TransactionRepository';
+import { mapFirestoreError, translateFirestoreErrors } from './firestoreErrors';
 
 const MAX_REMEMBERED_CURSORS = 50;
 
@@ -83,7 +84,11 @@ export class FirestoreTransactionRepository implements TransactionRepository {
     return snapshot.exists() ? snapshot : null;
   }
 
-  async listPage(uid: string, { filters, cursor, pageSize }: ListPageParams): Promise<TransactionPage> {
+  listPage(uid: string, params: ListPageParams): Promise<TransactionPage> {
+    return translateFirestoreErrors(() => this.fetchPage(uid, params));
+  }
+
+  private async fetchPage(uid: string, { filters, cursor, pageSize }: ListPageParams): Promise<TransactionPage> {
     const constraints = buildConstraints(filters);
     const startDocument = cursor ? await this.resolveCursor(uid, cursor) : null;
     if (cursor && !startDocument) return { items: [], nextCursor: null };
@@ -108,22 +113,24 @@ export class FirestoreTransactionRepository implements TransactionRepository {
       return onSnapshot(
         recentQuery,
         (snapshot) => subscriber.next(snapshot.docs.map(toTransaction)),
-        (error) => subscriber.error(error)
+        (error) => subscriber.error(mapFirestoreError(error))
       );
     });
   }
 
-  async add(uid: string, input: TransactionInput, createdAt: number = Date.now()): Promise<Transaction> {
-    const data = { ...input, criadoEm: createdAt };
-    const reference = await addDoc(this.collectionFor(uid), data);
-    return { id: reference.id, ...data };
+  add(uid: string, input: TransactionInput, createdAt: number = Date.now()): Promise<Transaction> {
+    return translateFirestoreErrors(async () => {
+      const data = { ...input, criadoEm: createdAt };
+      const reference = await addDoc(this.collectionFor(uid), data);
+      return { id: reference.id, ...data };
+    });
   }
 
-  async update(uid: string, id: string, input: TransactionInput): Promise<void> {
-    await updateDoc(doc(this.collectionFor(uid), id), { ...input });
+  update(uid: string, id: string, input: TransactionInput): Promise<void> {
+    return translateFirestoreErrors(() => updateDoc(doc(this.collectionFor(uid), id), { ...input }));
   }
 
-  async remove(uid: string, id: string): Promise<void> {
-    await deleteDoc(doc(this.collectionFor(uid), id));
+  remove(uid: string, id: string): Promise<void> {
+    return translateFirestoreErrors(() => deleteDoc(doc(this.collectionFor(uid), id)));
   }
 }

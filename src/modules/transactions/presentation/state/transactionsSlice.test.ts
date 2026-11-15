@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RootState } from '@/shell/rootReducer';
+import type { RootState } from '@/core/presentation/store/registry';
 import { createTestStore, sampleInput } from '@/testing/createTestStore';
 import type { ListPageParams, TransactionPage } from '../../domain/entities';
 import { selectSummary, selectTransactionById, selectVisibleTransactions } from './selectors';

@@ -4,7 +4,7 @@ import { InteractionManager } from 'react-native';
 import { LoginScreen } from '@/modules/auth/presentation/screens/LoginScreen';
 import { RegisterScreen } from '@/modules/auth/presentation/screens/RegisterScreen';
 import { preloadMainScreens } from './screens';
-import type { AuthStackParamList } from './types';
+import type { AuthStackParamList } from '@/core/presentation/navigation/types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 

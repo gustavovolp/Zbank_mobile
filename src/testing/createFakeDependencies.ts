@@ -40,7 +40,7 @@ export function createFakeDependencies(options: { pageSize?: number; recentLimit
       update: new UpdateTransaction(transactionRepository),
       remove: new DeleteTransaction(transactionRepository),
     },
-    config: {
+    transactionsConfig: {
       pageSize: options.pageSize ?? 3,
       recentLimit: options.recentLimit ?? 300,
     },

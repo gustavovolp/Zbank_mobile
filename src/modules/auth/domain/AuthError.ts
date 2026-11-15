@@ -1,3 +1,5 @@
+import { DomainError } from '@/core/domain/errors';
+
 export type AuthErrorCode =
   | 'invalid-email'
   | 'invalid-credentials'
@@ -15,7 +17,7 @@ const MESSAGES: Record<AuthErrorCode, string> = {
   unknown: 'Não foi possível completar a operação. Tente novamente.',
 };
 
-export class AuthError extends Error {
+export class AuthError extends DomainError {
   readonly code: AuthErrorCode;
 
   constructor(code: AuthErrorCode) {

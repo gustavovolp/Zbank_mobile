@@ -1,5 +1,5 @@
 import { createEntityAdapter, createSlice, type EntityState, type PayloadAction } from '@reduxjs/toolkit';
-import { createAppAsyncThunk } from '@/shell/thunk';
+import { createAppAsyncThunk } from '@/core/presentation/store/thunk';
 import { getErrorMessage } from '@/core/presentation/errorMessage';
 import type { Transaction, TransactionFilters } from '../../domain/entities';
 import type { TransactionDraft } from '../../domain/validation';
@@ -50,7 +50,7 @@ export const fetchFirstPage = createAppAsyncThunk(
     try {
       return await extra.transactions.list.execute(
         auth.user.uid,
-        { filters: transactions.filters, cursor: null, pageSize: extra.config.pageSize },
+        { filters: transactions.filters, cursor: null, pageSize: extra.transactionsConfig.pageSize },
         { force: arg?.mode === 'refresh' }
       );
     } catch (error) {
@@ -71,7 +71,7 @@ export const fetchNextPage = createAppAsyncThunk(
       const page = await extra.transactions.list.execute(auth.user.uid, {
         filters: transactions.filters,
         cursor: transactions.nextCursor,
-        pageSize: extra.config.pageSize,
+        pageSize: extra.transactionsConfig.pageSize,
       });
       return { page, version: transactions.version };
     } catch (error) {
@@ -97,7 +97,7 @@ export const syncList = createAppAsyncThunk('transactions/sync', async (_: void,
   const hasFilters = Boolean(tipo || categoria || dataInicio || dataFim);
 
   if (!hasFilters) {
-    const pageSize = extra.config.pageSize;
+    const pageSize = extra.transactionsConfig.pageSize;
     const fromStream = transactions.recent.slice(0, pageSize).map(signature);
     const fromList = (transactions.ids as string[])
       .slice(0, pageSize)

@@ -2,19 +2,19 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
 import { InteractionManager } from 'react-native';
-import { useAppDispatch } from '@/shell/hooks';
+import { useAppDispatch } from '@/core/presentation/store/hooks';
 import { BootstrapIcon } from '@/core/presentation/components/BootstrapIcon';
 import { confirmarAcao } from '@/core/presentation/confirm';
 import { colors } from '@/core/presentation/theme';
-import { logout } from '@/modules/auth/presentation/state/authSlice';
-import { LazyDashboardCharts } from '@/modules/dashboard/presentation/LazyDashboardCharts';
+import { logout } from '@/modules/auth';
+import { LazyDashboardCharts } from '@/modules/dashboard';
 import {
   DashboardScreen,
   TransactionFormScreen,
   TransactionsListScreen,
   preloadSecondaryScreens,
 } from './screens';
-import type { AppStackParamList, TabsParamList } from './types';
+import type { AppStackParamList, TabsParamList } from '@/core/presentation/navigation/types';
 
 const Tab = createBottomTabNavigator<TabsParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();

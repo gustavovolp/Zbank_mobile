@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import type { RootState } from '@/shell/rootReducer';
+import type { RootState } from '@/core/presentation/store/registry';
 import { calculateSummary, searchTransactions } from '../../domain/summary';
 import { transactionsAdapter } from './transactionsSlice';
 

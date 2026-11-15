@@ -11,8 +11,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useAppDispatch, useAppSelector } from '@/shell/hooks';
-import type { AppStackParamList } from '@/shell/navigation/types';
+import { useAppDispatch, useAppSelector } from '@/core/presentation/store/hooks';
+import type { AppStackParamList } from '@/core/presentation/navigation/types';
 import type { FieldErrors } from '@/core/domain/errors';
 import { Button } from '@/core/presentation/components/Button';
 import { FormField } from '@/core/presentation/components/FormField';

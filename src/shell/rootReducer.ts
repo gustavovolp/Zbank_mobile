@@ -1,10 +1,9 @@
-import { combineReducers } from '@reduxjs/toolkit';
-import { authReducer } from '@/modules/auth/presentation/state/authSlice';
-import { transactionsReducer } from '@/modules/transactions/presentation/state/transactionsSlice';
+import { combineReducers, type Reducer } from '@reduxjs/toolkit';
+import type { RootState } from '@/core/presentation/store/registry';
+import { authReducer } from '@/modules/auth';
+import { transactionsReducer } from '@/modules/transactions';
 
-export const rootReducer = combineReducers({
+export const rootReducer: Reducer<RootState> = combineReducers({
   auth: authReducer,
   transactions: transactionsReducer,
 });
-
-export type RootState = ReturnType<typeof rootReducer>;

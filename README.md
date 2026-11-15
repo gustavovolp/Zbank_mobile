@@ -18,7 +18,7 @@ A Fase 4 não adiciona telas novas: ela **reestrutura o app por dentro** para fi
 
 | Requisito do desafio | Solução implementada | Onde está |
 |---|---|---|
-| Arquitetura modular | Código organizado por módulos de negócio (`auth`, `transactions`, `dashboard`) + núcleo compartilhado (`core`) + casca do app (`shell`) | `src/modules`, `src/core`, `src/shell` |
+| Arquitetura modular | Código organizado por módulos de negócio (`auth`, `transactions`, `dashboard`) com **API pública** (`index.ts`), núcleo compartilhado (`core`) e uma casca que só compõe (`shell`); o núcleo não conhece nenhuma feature e os módulos não conhecem o shell | `src/modules`, `src/core`, `src/shell` |
 | Separar apresentação, domínio e infraestrutura (Clean Architecture) | Cada módulo tem as 3 camadas; o domínio é TypeScript puro (sem React, Firebase ou Redux) e define *portas* que a infraestrutura implementa. A regra de dependência é verificada por um teste automatizado | `modules/*/domain`, `modules/*/infrastructure`, `modules/*/presentation`, `src/architecture.test.ts` |
 | State management avançado | Redux Toolkit: slices, normalização com `createEntityAdapter`, seletores memoizados (`createSelector`), thunks com injeção de dependências e proteção contra respostas fora de ordem | `modules/*/presentation/state`, `src/shell` |
 | Lazy loading e pré-carregamento | Telas e gráficos carregados sob demanda (`React.lazy` + `Suspense`, chunks separados) e pré-carregados em momentos ociosos; dados da sessão pré-buscados no login | `core/presentation/lazy.tsx`, `shell/navigation`, `shell/session.ts` |
@@ -61,34 +61,48 @@ A Fase 4 não adiciona telas novas: ela **reestrutura o app por dentro** para fi
 
 As dependências sempre apontam para dentro: o **domínio não conhece** React, Firebase, Redux nem Expo — por isso as regras de negócio rodam (e são testadas) em Node puro, sem celular e sem backend. Quem liga tudo é a *composição de dependências* em `src/core/di/container.ts`, o único lugar que conhece as implementações concretas.
 
-Essas regras não são só convenção: `src/architecture.test.ts` lê os imports de todo o código e **falha** se alguém, por exemplo, importar o Firebase dentro do domínio, usar a infraestrutura direto numa tela, ou fizer o módulo `auth` depender do módulo `transactions`.
+Essas regras não são só convenção: `src/architecture.test.ts` lê os imports de todo o código e **falha** se alguém, por exemplo:
+
+- importar o Firebase, o React ou o Redux dentro do **domínio**;
+- usar a **infraestrutura** direto numa tela;
+- fazer o **núcleo** (`core`) importar uma feature, ou um **módulo** importar o `shell` (a dependência só vai de fora para dentro);
+- acessar outro módulo por arquivos internos em vez da sua **API pública** (`index.ts`), ou fazer `auth` depender de `transactions`.
+
+### Modularidade: API pública e registro de estado
+
+- Cada módulo expõe só o que os outros precisam em `modules/<módulo>/index.ts` (lógica, sem telas). O `dashboard`, por exemplo, só enxerga `selectSummary`, `findCategoryLabel` e o tipo `FinancialSummary` do módulo `transactions`.
+- O `core` define o formato do estado global e das dependências sem conhecer ninguém (`core/presentation/store/registry.ts`). Cada módulo **registra a sua parte** (`StateRegistry` e `DependenciesRegistry`, via *module augmentation* do TypeScript): se alguém esquecer de ligar um reducer no `shell`, o projeto nem compila.
+- **Erros são de domínio, não do Firebase**: a infraestrutura traduz as falhas do Firestore para `DataAccessError` (e as do Firebase Auth para `AuthError`); as telas só conhecem `DomainError`, nunca códigos como `permission-denied`.
 
 ### Estrutura de pastas
 
 ```
 src/
 ├── core/                              # núcleo compartilhado
-│   ├── domain/                        # ValidationError, Clock, utilitários puros
+│   ├── domain/                        # DomainError/ValidationError/DataAccessError, portas (Clock...), utilitários puros
 │   ├── infrastructure/
 │   │   ├── firebase/firebaseClient.ts # Firebase (sessão persistida no SecureStore)
 │   │   ├── security/                  # AES-GCM, chave, SecureStore em "chunks"
 │   │   ├── cache/EncryptedCache.ts    # cache persistente criptografado
 │   │   └── storage/KeyValueStore.ts   # abstração de armazenamento
-│   ├── presentation/                  # tema, componentes base, lazy, ícones
+│   ├── presentation/                  # tema, componentes base, lazy, ícones, tipos de navegação
+│   │   └── store/                     # registry do estado global, hooks tipados e createAppAsyncThunk
 │   └── di/                            # container (composição) e tipos das dependências
 ├── modules/
 │   ├── auth/
+│   │   ├── index.ts                   # API pública do módulo
 │   │   ├── domain/                    # entidades, AuthRepository (porta), casos de uso, política de senha
 │   │   ├── infrastructure/            # FirebaseAuthRepository
 │   │   └── presentation/              # telas de login/cadastro + authSlice
 │   ├── transactions/
+│   │   ├── index.ts                   # API pública do módulo
 │   │   ├── domain/                    # entidades, categorias, validação, resumo, casos de uso
 │   │   ├── infrastructure/            # FirestoreTransactionRepository + CachedTransactionRepository
 │   │   └── presentation/              # lista, formulário, transactionsSlice, seletores, streams
-│   └── dashboard/presentation/        # DashboardScreen, SaldoCard, gráficos (lazy)
-├── shell/                             # casca do app: store, hooks, sessão, navegação
+│   └── dashboard/                     # index.ts + presentation: DashboardScreen, SaldoCard, gráficos (lazy)
+├── shell/                             # casca que só compõe: rootReducer, store, sessão, navegação
 ├── testing/                           # dublês em memória usados nos testes
-└── architecture.test.ts               # testa a regra de dependência entre camadas
+└── architecture.test.ts               # testa a regra de dependência entre camadas e módulos
 ```
 
 ### Fluxo de uma ação (exemplo: salvar uma transação)
@@ -100,7 +114,7 @@ src/
 
 ### Gerenciamento de estado (Redux Toolkit)
 
-- **Slices por módulo** (`auth`, `transactions`), combinados em `shell/rootReducer.ts`.
+- **Slices por módulo** (`auth`, `transactions`), cada um registrado no `core` e combinados em `shell/rootReducer.ts`.
 - **Normalização** das transações com `createEntityAdapter` e **seletores memoizados** (`createSelector`) para busca e resumo financeiro — componentes só re-renderizam quando o dado que usam muda.
 - **Injeção de dependências nos thunks** (`extraArgument`): o estado não conhece o Firebase; nos testes, o mesmo store roda com repositórios em memória.
 - **Respostas fora de ordem são descartadas**: cada busca da primeira página carrega um `requestId`, e a "próxima página" carrega uma `version` — se o usuário trocar de filtro no meio de uma requisição, o resultado antigo é ignorado.
@@ -254,7 +268,7 @@ Na primeira execução, crie uma conta pela tela **"Criar conta"** (não há usu
 ## 4. Testes
 
 ```bash
-npm test            # 155 testes automatizados (Vitest)
+npm test            # 182 testes automatizados (Vitest)
 npm run typecheck   # verificação de tipos (TypeScript, modo estrito)
 ```
 
@@ -264,7 +278,8 @@ Como o domínio é independente de framework e as dependências são injetadas, 
 - **Segurança e cache**: criptografia AES-GCM (ida e volta, nonce novo a cada gravação, detecção de adulteração, chave errada), armazenamento seguro em pedaços (limites do SecureStore), cache criptografado (validade, adulteração, limpeza).
 - **Cache de requisições**: TTL, invalidação nas escritas, resposta antiga descartada, *stale-while-revalidate*, isolamento por usuário, limpeza no logout.
 - **Estado e reatividade**: paginação, corridas de requisição, mutações, seletores memoizados, `debounce` da busca (com timers falsos), sincronização reativa da lista, encerramento da sessão.
-- **Arquitetura**: regra de dependência entre camadas e independência entre módulos (`src/architecture.test.ts`).
+- **Contrato dos repositórios**: a mesma suíte de comportamento roda contra o repositório em memória e contra o decorator de cache (ordenação, paginação, filtros, escrita visível na leitura seguinte, isolamento por usuário, *stream*), garantindo que o cache nunca devolva dado velho.
+- **Arquitetura**: regra de dependência entre camadas, núcleo sem features, módulos sem o shell, acesso entre módulos só pela API pública (`src/architecture.test.ts`).
 
 O adaptador real do Firestore (`FirestoreTransactionRepository`) e a integração com o SecureStore do aparelho dependem de backend/dispositivo e são validados manualmente pelo roteiro abaixo.
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DataAccessError } from '@/core/domain/errors';
 import { applyFilters } from '@/modules/transactions/presentation/state/transactionsSlice';
 import { createTestStore, sampleInput, TEST_USER } from '@/testing/createTestStore';
 import { startUserSession } from './session';
@@ -99,7 +100,7 @@ describe('startUserSession', () => {
     dependencies.transactions.observeRecent.execute = () =>
       new (class {
         subscribe(observer: { error: (error: unknown) => void }) {
-          observer.error({ code: 'permission-denied' });
+          observer.error(new DataAccessError('permission-denied'));
           return { unsubscribe: () => undefined };
         }
       })() as never;

@@ -1,6 +1,9 @@
+import { Observable } from 'rxjs';
 import { describe, expect, it } from 'vitest';
 import { ValidationError } from '@/core/domain/errors';
 import { createFakeDependencies } from '@/testing/createFakeDependencies';
+import type { Transaction } from '../entities';
+import { MAX_RECENT_TRANSACTIONS } from './ObserveRecentTransactions';
 
 const draft = {
   valor: 25.5,
@@ -77,6 +80,32 @@ describe('use cases de transações', () => {
         pageSize: 2,
       })
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('DeleteTransaction rejeita id vazio sem chamar o repositório', async () => {
+    const { dependencies, transactionRepository } = createFakeDependencies();
+    const spy = { calls: 0 };
+    transactionRepository.remove = async () => {
+      spy.calls += 1;
+    };
+
+    await expect(dependencies.transactions.remove.execute('u1', '  ')).rejects.toBeInstanceOf(ValidationError);
+    expect(spy.calls).toBe(0);
+  });
+
+  it('ObserveRecentTransactions limita a quantidade pedida (protege as leituras do banco)', () => {
+    const { dependencies, transactionRepository } = createFakeDependencies();
+    const requested: number[] = [];
+    transactionRepository.observeRecent = ((_uid: string, max: number) => {
+      requested.push(max);
+      return new Observable<Transaction[]>();
+    }) as typeof transactionRepository.observeRecent;
+
+    dependencies.transactions.observeRecent.execute('u1', 100_000);
+    dependencies.transactions.observeRecent.execute('u1', 0);
+    dependencies.transactions.observeRecent.execute('u1', 300);
+
+    expect(requested).toEqual([MAX_RECENT_TRANSACTIONS, 1, 300]);
   });
 
   it('ObserveRecentTransactions emite o estado atual e as mudanças seguintes', async () => {

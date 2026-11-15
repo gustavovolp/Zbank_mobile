@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import type { AppDependencies } from '@/core/di/dependencies';
+import type { AppDependencies } from '@/core/presentation/store/registry';
 import { rootReducer } from './rootReducer';
 
 export function createAppStore(dependencies: AppDependencies) {
@@ -10,4 +10,3 @@ export function createAppStore(dependencies: AppDependencies) {
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
-export type AppDispatch = AppStore['dispatch'];

@@ -54,7 +54,12 @@ function violations(
     );
 }
 
-const moduleOf = (path: string) => /\/modules\/([^/]+)\//.exec(path)?.[1] ?? null;
+const moduleOf = (path: string) => /\/modules\/([^/]+)(?:\/|$)/.exec(path)?.[1] ?? null;
+
+const inDomain = (path: string) => path.includes('/domain/');
+const inModules = (path: string) => path.includes('/src/modules/');
+const inShell = (path: string) => path.includes('/src/shell/');
+const isCompositionRoot = (path: string) => inShell(path) || path.includes('/src/core/di/');
 
 describe('arquitetura: regra de dependência (Clean Architecture)', () => {
   it('encontra os arquivos de código para analisar', () => {
@@ -66,7 +71,7 @@ describe('arquitetura: regra de dependência (Clean Architecture)', () => {
 
     expect(
       violations(
-        (file) => file.path.includes('/domain/'),
+        (file) => inDomain(file.path),
         (_file, specifier, target) => target === null && !allowedPackages.has(specifier)
       )
     ).toEqual([]);
@@ -75,21 +80,8 @@ describe('arquitetura: regra de dependência (Clean Architecture)', () => {
   it('o domínio só enxerga o próprio domínio (nunca infraestrutura, apresentação ou o shell)', () => {
     expect(
       violations(
-        (file) => file.path.includes('/domain/'),
-        (_file, _specifier, target) => target !== null && !target.includes('/domain/')
-      )
-    ).toEqual([]);
-  });
-
-  it('o domínio de um módulo não importa o domínio de outro módulo', () => {
-    expect(
-      violations(
-        (file) => file.path.includes('/modules/') && file.path.includes('/domain/'),
-        (file, _specifier, target) => {
-          if (!target) return false;
-          const other = moduleOf(target);
-          return other !== null && other !== moduleOf(file.path);
-        }
+        (file) => inDomain(file.path),
+        (_file, _specifier, target) => target !== null && !inDomain(target)
       )
     ).toEqual([]);
   });
@@ -99,7 +91,7 @@ describe('arquitetura: regra de dependência (Clean Architecture)', () => {
       violations(
         (file) => file.path.includes('/infrastructure/'),
         (_file, _specifier, target) =>
-          target !== null && (target.includes('/presentation/') || target.includes('/src/shell/'))
+          target !== null && (target.includes('/presentation/') || inShell(target))
       )
     ).toEqual([]);
   });
@@ -109,6 +101,39 @@ describe('arquitetura: regra de dependência (Clean Architecture)', () => {
       violations(
         (file) => file.path.includes('/presentation/'),
         (_file, _specifier, target) => target !== null && target.includes('/infrastructure/')
+      )
+    ).toEqual([]);
+  });
+});
+
+describe('arquitetura: modularidade', () => {
+  it('o núcleo (core) não conhece nenhuma feature nem o shell — só a raiz de composição (core/di) conhece', () => {
+    expect(
+      violations(
+        (file) => file.path.includes('/src/core/') && !isCompositionRoot(file.path),
+        (_file, _specifier, target) => target !== null && (inModules(target) || inShell(target))
+      )
+    ).toEqual([]);
+  });
+
+  it('os módulos não dependem do shell (a dependência vai do shell para os módulos, nunca o contrário)', () => {
+    expect(
+      violations(
+        (file) => inModules(file.path),
+        (_file, _specifier, target) => target !== null && inShell(target)
+      )
+    ).toEqual([]);
+  });
+
+  it('um módulo só acessa outro módulo pela API pública (index.ts), nunca por arquivos internos', () => {
+    expect(
+      violations(
+        (file) => inModules(file.path) && !isCompositionRoot(file.path),
+        (file, _specifier, target) => {
+          if (!target) return false;
+          const other = moduleOf(target);
+          return other !== null && other !== moduleOf(file.path) && !target.endsWith(`/modules/${other}`);
+        }
       )
     ).toEqual([]);
   });
@@ -128,7 +153,22 @@ describe('arquitetura: regra de dependência (Clean Architecture)', () => {
     ).toEqual([]);
   });
 
-  it('nenhum arquivo de código tem comentários de linha (convenção do projeto)', () => {
+  it('a API pública dos módulos expõe só lógica, sem arquivos de interface (.tsx)', () => {
+    const publicApis = sources.filter((file) => /\/src\/modules\/[^/]+\/index\.ts$/.test(file.path));
+
+    expect(publicApis.length).toBeGreaterThanOrEqual(3);
+    expect(
+      publicApis.flatMap((file) =>
+        file.imports
+          .filter((specifier) => /(?:Screen|\.tsx)$/.test(specifier))
+          .map((specifier) => `${rel(file.path)} -> ${specifier}`)
+      )
+    ).toEqual([]);
+  });
+});
+
+describe('arquitetura: convenções do projeto', () => {
+  it('nenhum arquivo de código tem comentários de linha', () => {
     const withComments = sources
       .filter((file) => /^\s*\/\/(?!\s*eslint)/m.test(readFileSync(file.path, 'utf8')))
       .map((file) => rel(file.path));

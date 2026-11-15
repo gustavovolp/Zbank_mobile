@@ -1,4 +1,4 @@
-import { systemClock } from '@/core/domain/ports';
+import { systemClock } from '@/core/infrastructure/systemClock';
 import { SecureLocalCache } from '@/core/infrastructure/cache/EncryptedCache';
 import { auth, db } from '@/core/infrastructure/firebase/firebaseClient';
 import { createEncryptorProvider } from '@/core/infrastructure/security/encryption';
@@ -53,7 +53,7 @@ export const container: AppDependencies = {
     update: new UpdateTransaction(transactionRepository),
     remove: new DeleteTransaction(transactionRepository),
   },
-  config: {
+  transactionsConfig: {
     pageSize: 15,
     recentLimit: 300,
   },

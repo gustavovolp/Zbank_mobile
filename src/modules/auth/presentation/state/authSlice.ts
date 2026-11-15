@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { createAppAsyncThunk } from '@/shell/thunk';
+import { createAppAsyncThunk } from '@/core/presentation/store/thunk';
 import { getErrorMessage } from '@/core/presentation/errorMessage';
 import type { AuthUser, RegisterData } from '../../domain/entities';
 
